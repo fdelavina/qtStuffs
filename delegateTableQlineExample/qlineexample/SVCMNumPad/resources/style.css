@@ -1,0 +1,372 @@
+
+QStatusBar {
+	background: palette(light);
+}
+
+QWidget#toppanel {
+	background:palette(light);
+}
+
+
+QMenu::separator {
+	background: palette(light);
+	height: 1px;
+    margin-left: 10px;
+    margin-right: 5px;
+}
+
+QMainWindow {
+     border      : 1px solid palette(mid);
+}
+
+QToolBar  {
+     padding     : 0px;
+     border      : 0px;
+     margin      : 0px;
+}
+QToolBar::separator {
+	background: palette(light);
+	width: 1px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+QToolBar#titlebar  {
+     padding            : 6px;
+     border-bottom      : 1px solid palette(mid);
+     background         : palette(window);
+}
+
+QToolBar#titlebar > QLabel  {
+     color         : palette(light);
+}
+
+QToolBar#titlebardata  {
+     padding            : 0px;
+     border-bottom      : 1px solid palette(mid);
+     background         : palette(window);
+}
+
+QToolBar#titlebardata > QLabel  {
+     color         : palette(light);
+}
+
+QFrame{
+    border: 0px;
+    padding: 0px;
+}
+
+
+QToolButton {
+    border      : 0px;
+    margin      : 0px;
+    padding     : 0px;
+    background  : transparent;
+}
+
+QToolButton:pressed {
+    border-radius: 3px;
+    border      : 0px;
+    background  : palette(light);
+    padding: 1px -1px -1px 1px;
+}
+
+QToolButton:checked {
+    background  : palette(midlight);
+    color       : palette(highlightedtext);
+}
+
+QPushButton {
+    border      : 1px solid palette(light);
+    background  : palette(mid);
+    padding     : 4px;
+	margin      : 4px;
+}
+
+QPushButton:pressed {
+	padding		: 1px -1px -1px 1px;
+}
+
+QPushButton:hover {
+    border      : 2px solid palette(highlight);
+}
+
+QPushButton:checked {
+	border      : 2px solid palette(highlight);
+	background  : palette(midlight);
+    color       : palette(highlightedtext);
+}
+
+QScrollBar:horizontal {
+    border: 9px solid palette(window);
+	padding: -6px;
+    background: palette(light);
+    height: 20px;
+    margin: 0px 15px 0 15px;
+}
+QScrollBar::handle:horizontal {
+	border-radius: 3px;
+    background: palette(light);
+    min-width: 20px;
+}
+QScrollBar::add-line:horizontal {
+    border: 0px;
+    background: palette(window);
+    width: 20px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal {
+    border: 0px;
+    background: palette(window);
+    width: 20px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar:left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+	border-radius: 3px;
+	border-color: palette(window);
+    width: 6px;
+    height: 6px;
+    background: palette(light);
+}
+
+QScrollBar:vertical {
+    border: 9px solid palette(window);
+	padding: -6px;
+    background: palette(light);
+    width: 20px;
+    margin: 15px 0px 15px 0px;
+}
+QScrollBar::handle:vertical {
+	border-radius: 3px;
+    background: palette(light);
+    min-height: 30px;
+}
+QScrollBar::add-line:vertical {
+    border: 0px;
+    background: palette(window);
+    height: 20px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    border: 0px;
+    background: palette(window);
+    height: 20px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar:up-arrow:vertical, QScrollBar::down-arrow:vertical {
+	border-radius: 3px;
+	border-color: palette(window);
+    width: 6px;
+    height: 6px;
+    background: palette(light);
+}
+
+QSpinBox {
+    border: 1px solid palette(mid);
+	border-radius: 0px;
+}
+	
+QToolBar > QSpinBox {
+    padding: 3px 3px 3px 3px;
+}
+QVBoxLayout > QSpinBox {
+    padding: 3px 3px 3px 3px;
+}
+
+
+
+QSpinBox:focus {
+    border      : 1px solid palette(highlight);
+}
+
+QSpinBox::up-button {
+	subcontrol-origin: border;
+	subcontrol-position: top right;
+
+	width: 16px;
+	border-image: url(:/resources/16x16/arrow_up.png) 1;
+
+}
+QSpinBox::up-button:hover {
+  border-image: url(:/resources/16x16/arrow_up_hover.png) 1;
+}
+
+QSpinBox::up-button:pressed {
+  border-image: url(:/resources/16x16/arrow_up_press.png) 1;
+}
+
+QSpinBox::down-button {
+	subcontrol-origin: border;
+	subcontrol-position: bottom right;
+
+	width: 16px;
+	border-image: url(:/resources/16x16/arrow_down.png) 1;
+}
+QSpinBox::down-button:hover {
+  border-image: url(:/resources/16x16/arrow_down_hover.png) 1;
+}
+
+QSpinBox::down-button:pressed {
+  border-image: url(:/resources/16x16/arrow_down_press.png) 1;
+}
+
+
+QLineEdit {
+    border: 1px solid palette(mid);
+	border-radius: 0px;
+}
+
+QToolBar > QLineEdit {
+    padding: 3px 3px 3px 3px;
+}
+QVBoxLayout > QLineEdit {
+    padding: 3px 3px 3px 3px;
+}
+
+
+QLineEdit:focus {
+    border      : 1px solid palette(highlight);
+}
+
+
+QComboBox {
+    border: 1px solid palette(mid);
+	border-radius: 0px;
+}
+
+QToolBar > QComboBox {
+    padding: 3px 3px 3px 3px;
+}
+
+QVBoxLayout > QComboBox {
+    padding: 3px 3px 3px 3px;
+}
+
+
+QComboBox:focus {
+    border      : 1px solid palette(highlight);
+}
+ 
+QComboBox::drop-down {
+	subcontrol-origin: padding;
+	subcontrol-position: top right;
+    width: 15px;
+	border-left-width: 0px;
+	border-left-color: darkgray;
+	border-left-style: solid;
+}
+
+QComboBox::down-arrow {
+	image: url(:/resources/16x16/arrow_down.png);
+}
+
+ QComboBox::down-arrow:hover {
+	image: url(:/resources/16x16/arrow_down_hover.png);
+ }
+ 
+ QComboBox::down-arrow:on {
+	image: url(:/resources/16x16/arrow_down_press.png);
+ }
+ 
+ 
+ 
+QCheckBox {
+  spacing: 5px;
+}
+
+QCheckBox::indicator {
+  width: 13px;
+  height: 13px;
+}
+
+QCheckBox::indicator:unchecked {
+  image: url(:/resources/16x16/check.png);
+}
+
+QCheckBox::indicator:checked {
+  image: url(:/resources/16x16/check_on.png);
+}
+
+QCheckBox::indicator:indeterminate {
+  image: url(:/resources/16x16/check_indeterminate.png);
+}
+  
+
+QListView::indicator:checked {
+    image: url(:/resources/16x16/check_on.png);
+}
+
+
+QListView::indicator:unchecked {
+    image: url(:/resources/16x16/check.png);
+}
+
+QListView::indicator:indeterminate {
+    image: url(:/resources/16x16/check_indeterminate.png);
+}
+ 
+
+QTreeView::indicator:checked { 
+    image: url(:/resources/16x16/check_on.png);
+}
+
+
+QTreeView::indicator:unchecked { 
+    image: url(:/resources/16x16/check.png);
+}
+
+QTreeView::indicator:indeterminate { 
+	image: url(:/resources/16x16/check_indeterminate.png);
+}
+
+
+QDateTimeEdit {
+    border: 1px solid palette(mid);
+    border-radius: 0px;
+    padding: 3px 3px 3px 3px;
+}
+
+QDateTimeEdit:focus {
+    border      : 1px solid palette(highlight);
+}
+
+QDateTimeEdit::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+
+    width: 16px;
+    border-image: url(:/resources/16x16/arrow_up.png) 1;
+
+}
+QDateTimeEdit::up-button:hover {
+  border-image: url(:/resources/16x16/arrow_up_hover.png) 1;
+}
+
+QDateTimeEdit::up-button:pressed {
+  border-image: url(:/resources/16x16/arrow_up_press.png) 1;
+}
+
+QDateTimeEdit::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+
+    width: 16px;
+    border-image: url(:/resources/16x16/arrow_down.png) 1;
+}
+QDateTimeEdit::down-button:hover {
+  border-image: url(:/resources/16x16/arrow_down_hover.png) 1;
+}
+
+QDateTimeEdit::down-button:pressed {
+  border-image: url(:/resources/16x16/arrow_down_press.png) 1;
+}
