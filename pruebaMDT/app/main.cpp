@@ -3,9 +3,6 @@
 #include <QSurfaceFormat>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
-#include "lib/dynamicSoologic/src/icosphere.h"
-#include "../lib/fEngine/src/TriangleWindow.h"
-#include "../lib/fEngine/src/sphereico.h"
 #include "lib/window/src/mainwindow.h"
 #include "lib/fEngine/src/Fengine.h"
 #include <QDebug>

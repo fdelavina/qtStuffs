@@ -2,27 +2,35 @@
 #define ICOSPHERE_H
 #include <vector>
 #include "globalLib/Global/globalLib.h"
+#include "geomaths.h"
 
-struct DYNAMICSOOLOGIC_EXPORT vertices
-{
-    std::vector<float> vertices;
-    std::vector<int> indices;
-};
+enum TypeMesh { OriginalIco,
+                Triangles };
 
 class DYNAMICSOOLOGIC_EXPORT IcoSphere
 {
 public:
     IcoSphere(float radius);
+    //run
     void runOriginalIco(float radius);
 
+    void getNearTriangle(LatLon latlon, const float &radius, TypeMesh _Mesh);
+    bool isPointInActualTriangle(const LatLon &latlon);
     //getter
-    vertices getOriginalVertices();
+    vertices getOriginalvertices();
+    vertices getWorkingvertices();
 private:
     //meth
     void setOriginalIco();
+    void setLatLon(TypeMesh);
+    void setCartesiana(TypeMesh);
+    void setTriangleAsWorking(const TriangleCartesianas &triangle);
+    LatLon getLatLonFromTriangle(const int &indice, TypeMesh _Mesh);
+//    int getIdTriangleContainsPoint(const float &lat, const float &lon, TypeMesh _Mesh);
 
     //atr
     vertices m_original_ico;
+    vertices m_working;
     float m_radius;
 };
 

@@ -5,7 +5,7 @@
 #include <QOpenGLShaderProgram>
 #include <QCoreApplication>
 #include <math.h>
-
+#include <QDebug>
 bool Fengine::m_transparent = false;
 
 Fengine::Fengine(QWidget *parent)
@@ -19,10 +19,16 @@ Fengine::Fengine(QWidget *parent)
         fmt.setAlphaBufferSize(8);
         setFormat(fmt);
     }
-
+    setFocusPolicy(Qt::StrongFocus); // its a must for keyboard events
     m_sphere = new IcoSphere(1.0f);
     m_sphere->runOriginalIco(1.0f);
-    m_logoEbo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+    latlon_ref.lat = 0.0;
+    latlon_ref.lon = 0.0;
+    float radius = 0.5;
+    m_sphere->getNearTriangle(latlon_ref, radius, TypeMesh::OriginalIco);
+
+    m_ico_ebo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+    m_triangle_ebo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
 
 }
 
@@ -95,7 +101,8 @@ void Fengine::cleanup()
     if (m_program == nullptr)
         return;
     makeCurrent();
-    m_logoVbo.destroy();
+    m_ico_vbo.destroy();
+    m_triangle_vbo.destroy();
     delete m_program;
     m_program = nullptr;
     doneCurrent();
@@ -103,10 +110,12 @@ void Fengine::cleanup()
 
 static const char *vertexShaderSourceCore =
     "#version 330 core\n"
+        "uniform mat4 projMatrix;\n"
+        "uniform mat4 mvMatrix;\n"
         "layout (location = 0) in vec3 aPos;\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "   gl_Position = projMatrix * mvMatrix* vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
         "}\0";
 
 static const char *fragmentShaderSourceCore =
@@ -134,13 +143,6 @@ static const char *fragmentShaderSource =
 
 void Fengine::initializeGL()
 {
-    // In this example the widget's corresponding top-level window can change
-    // several times during the widget's lifetime. Whenever this happens, the
-    // QOpenGLWidget's associated context is destroyed and a new one is created.
-    // Therefore we have to be prepared to clean up the resources on the
-    // aboutToBeDestroyed() signal, instead of the destructor. The emission of
-    // the signal will be followed by an invocation of initializeGL() where we
-    // can recreate all resources.
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &Fengine::cleanup);
 
     initializeOpenGLFunctions();
@@ -153,71 +155,147 @@ void Fengine::initializeGL()
     m_program->link();
 
     m_program->bind();
-    //m_projMatrixLoc = m_program->uniformLocation("projMatrix");
-    //m_mvMatrixLoc = m_program->uniformLocation("mvMatrix");
-
-    // Create a vertex array object. In OpenGL ES 2.0 and OpenGL 2.x
-    // implementations this is optional and support may not be present
-    // at all. Nonetheless the below code works in all cases and makes
-    // sure there is a VAO when one is needed.
-    m_vao.create();
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-
-    // Setup our vertex buffer object.
-    m_logoVbo.create();
-    m_logoEbo.create();
-    m_logoVbo.bind();
-
-    std::vector<float> a = m_sphere->getOriginalVertices().vertices;
-    QVector<float> b = QVector<float>(a.begin(), a.end());
+    m_projMatrixLoc = m_program->uniformLocation("projMatrix");
+    m_mvMatrixLoc = m_program->uniformLocation("mvMatrix");
 
 
-    test.append( 0.5f);test.append( 0.5f);test.append(0.0f);
-    test.append( 0.5f);test.append(-0.5f);test.append(0.0f);
-    test.append(-0.5f);test.append(-0.5f);test.append(0.0f);
-    test.append(-0.5f);test.append( 0.5f);test.append(0.0f);
-
-    m_logoVbo.allocate(test.constData(), 12 * sizeof(GLfloat));
-
-    m_logoEbo.bind();
-    m_logoEbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-
-
-
-    std::vector<int> a2 = m_sphere->getOriginalVertices().indices;
-    QVector<int> b2 = QVector<int>(a2.begin(), a2.end());
-
-    test_indice.append(0);test_indice.append(1);test_indice.append(3);
-    test_indice.append(1);test_indice.append(2);test_indice.append(3);
-
-    m_logoEbo.allocate(test_indice.constData(), 6 * sizeof(GLint));
-
-
-    // Store the vertex attribute bindings for the program.
-    setupVertexAttribs();
-
+    setVaoIco();
+    setVaoTriangle(true);
+    setVaoPoint(true);
     // Our camera never changes in this example.
-    //m_camera.setToIdentity();
-    //m_camera.translate(0, 0, -2);
+    m_camera.setToIdentity();
+    m_camera.translate(0, 0, -4);
 
     // Light position is fixed.
     //m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
 
     m_program->release();
+}
 
+void Fengine::setupVertexAttribsIco()
+{
+    m_ico_vbo.bind();
+    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    f->glEnableVertexAttribArray(0);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
+    m_ico_vbo.release();
 
 }
 
-void Fengine::setupVertexAttribs()
+void Fengine::setupVertexAttribsTriangle()
 {
-    m_logoVbo.bind();
-    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat),
-                             nullptr);
+    m_triangle_vbo.bind();
+    QOpenGLFunctions *f2 = QOpenGLContext::currentContext()->functions();
+    f2->glEnableVertexAttribArray(0);
+    f2->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
+    m_triangle_vbo.release();
+}
 
-    //m_logoVbo.release();
+void Fengine::setupVertexAttribsPoint()
+{
+    m_point_vbo.bind();
+    QOpenGLFunctions *f3 = QOpenGLContext::currentContext()->functions();
+    f3->glEnableVertexAttribArray(0);
+    f3->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
+    m_point_vbo.release();
+}
 
+void Fengine::setVaoIco()
+{
+    m_ico_vao.create();
+    m_ico_vbo.create();
+    m_ico_ebo.create();
+
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_ico_vao);
+    m_ico_vao.bind();
+        m_ico_vbo.bind();
+        m_ico_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        m_ico_vbo.allocate(m_sphere->getOriginalvertices().vertices_cartesianas.data(),
+                           m_sphere->getOriginalvertices().vertices_cartesianas.size() * sizeof(GLfloat));
+        m_ico_ebo.bind();
+        m_ico_ebo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        m_ico_ebo.allocate(m_sphere->getOriginalvertices().indices.data(),
+                           m_sphere->getOriginalvertices().indices.size() * sizeof(GLint));
+
+        setupVertexAttribsIco();
+}
+
+void Fengine::setVaoTriangle(bool ini)
+{
+    if (ini)
+    {
+        m_triangle_vao.create();
+        m_triangle_vbo.create();
+        m_triangle_ebo.create();
+    }
+
+
+    QOpenGLVertexArrayObject::Binder vaoBinder2(&m_triangle_vao);
+    m_triangle_vao.bind();
+        m_triangle_vbo.bind();
+        m_triangle_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        m_triangle_vbo.allocate(m_sphere->getWorkingvertices().vertices_cartesianas.data(),
+                                m_sphere->getWorkingvertices().vertices_cartesianas.size() * sizeof(GLfloat));
+        m_triangle_ebo.bind();
+        m_triangle_ebo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        m_triangle_ebo.allocate(m_sphere->getWorkingvertices().indices.data(),
+                                m_sphere->getWorkingvertices().indices.size() * sizeof(GLint));
+
+        setupVertexAttribsTriangle();
+}
+
+void Fengine::setVaoPoint(bool ini)
+{
+    if (ini)
+    {
+    m_point_vao.create();
+    m_point_vbo.create();
+    m_point_ebo.create();
+    }
+    float x,y,z;
+    float radius = 2;
+    GeoMaths::getCartesianaFromLatLon(radius, latlon_ref.lat, latlon_ref.lon, x, y, z);
+    line_ref.clear();
+    line_ref.push_back(0.0);
+    line_ref.push_back(0.0);
+    line_ref.push_back(0.0);
+    line_ref.push_back(x);
+    line_ref.push_back(y);
+    line_ref.push_back(z);
+
+    qDebug()<<line_ref[0];
+    qDebug()<<line_ref[1];
+    qDebug()<<line_ref[2];
+    qDebug()<<line_ref[3];
+    qDebug()<<line_ref[4];
+    qDebug()<<line_ref[5];
+
+    QOpenGLVertexArrayObject::Binder vaoBinder2(&m_point_vao);
+    m_point_vao.bind();
+        m_point_vbo.bind();
+        m_point_vbo.setUsagePattern(QOpenGLBuffer::StreamDraw);
+        m_point_vbo.allocate(line_ref.data(),
+                             line_ref.size() * sizeof(GLfloat));
+//        m_point_ebo.bind();
+//        m_point_ebo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+//        m_point_ebo.allocate(m_sphere->getWorkingvertices().indices.data(),
+//                                m_sphere->getWorkingvertices().indices.size() * sizeof(GLint));
+
+        setupVertexAttribsPoint();
+}
+
+void Fengine::runAlgorithm()
+{
+    setVaoPoint(false);
+    if (m_sphere->isPointInActualTriangle(latlon_ref))
+    {
+        return;
+    }
+    else
+    {
+        m_sphere->getNearTriangle(latlon_ref, 0.01, TypeMesh::OriginalIco);
+        setVaoTriangle(false);
+    }
 }
 
 
@@ -225,23 +303,51 @@ void Fengine::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    runAlgorithm();
 
-   // m_world.setToIdentity();
-//    m_world.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
-//    m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
-//    m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
-//    //m_camera.setToIdentity();
-//    m_camera.translate(0, 0, m_zoom);
+    //qDebug()<<latlon_ref.lat;
+    m_world.setToIdentity();
+    m_world.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
+    m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
+    m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
+    //m_camera.setToIdentity();
+    //m_camera.translate(0, 0, m_zoom);
 
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_triangle_vao);
     m_program->bind();
-    m_vao.bind();
-//    m_program->setUniformValue(m_projMatrixLoc, m_proj);
-//    m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
-   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   // m_ico_vao.bind();
+    m_triangle_vao.bind();
+    m_program->setUniformValue(m_projMatrixLoc, m_proj);
+    m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     //glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    m_vao.release();
+   // glDrawElements(GL_TRIANGLES, m_sphere->getOriginalvertices().indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, m_sphere->getWorkingvertices().indices.size(), GL_UNSIGNED_INT, 0);
+    m_triangle_vao.release();
+ //   m_ico_vao.release();
+
+     m_ico_vao.bind();
+    // m_triangle_vao.bind();
+     //m_program->setUniformValue(m_projMatrixLoc, m_proj);
+     //m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
+     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+     //glDrawArrays(GL_TRIANGLES, 0, 3);
+     glDrawElements(GL_TRIANGLES, m_sphere->getOriginalvertices().indices.size(), GL_UNSIGNED_INT, 0);
+     //glDrawElements(GL_TRIANGLES, m_sphere->getWorkingvertices().indices.size(), GL_UNSIGNED_INT, 0);
+    // m_triangle_vao.release();
+     m_ico_vao.release();
+
+     m_point_vao.bind();
+    // m_triangle_vao.bind();
+    // m_program->setUniformValue(m_projMatrixLoc, m_proj);
+     //m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
+     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+     glDrawArrays(GL_LINES, 0, 2);
+     //glDrawElements(GL_TRIANGLES, m_sphere->getOriginalvertices().indices.size(), GL_UNSIGNED_INT, 0);
+     //glDrawElements(GL_TRIANGLES, m_sphere->getWorkingvertices().indices.size(), GL_UNSIGNED_INT, 0);
+    // m_triangle_vao.release();
+     m_point_vao.release();
+
     m_program->release();
 
 
@@ -250,12 +356,38 @@ void Fengine::paintGL()
 void Fengine::resizeGL(int w, int h)
 {
     m_proj.setToIdentity();
-   // m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
+    m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
 }
 
 void Fengine::mousePressEvent(QMouseEvent *event)
 {
     m_lastPos = event->pos();
+}
+
+void Fengine::keyPressEvent(QKeyEvent *event)
+{
+    qDebug()<<"lat: " <<latlon_ref.lat;
+    qDebug()<<"lon: " <<latlon_ref.lon;
+    if( event->key() == Qt::Key_A )
+    {
+        latlon_ref.lat -= 0.5;
+    }
+    else if( event->key() == Qt::Key_D )
+    {
+        latlon_ref.lat += 0.5;
+    }
+    else if( event->key() == Qt::Key_W )
+    {
+        latlon_ref.lon += 0.5;
+    }
+    else if( event->key() == Qt::Key_S )
+    {
+        latlon_ref.lon -= 0.5;
+    }
+    else
+    {
+        return;
+    }
 }
 
 void Fengine::mouseMoveEvent(QMouseEvent *event)

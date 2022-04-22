@@ -37,7 +37,6 @@ private:
     QSlider *zSlider;
     QSlider *zoomSlider;
     QLineEdit *lneDistance;
-    QPushButton *dockBtn;
     MainWindow *mainWindow;
 };
 

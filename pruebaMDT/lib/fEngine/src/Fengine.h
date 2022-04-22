@@ -7,7 +7,6 @@
 #include <QOpenGLBuffer>
 #include <QMatrix4x4>
 #include <qopengl.h>
-#include "lib/fEngine/src/sphereico.h"
 #include "lib/dynamicSoologic/src/icosphere.h"
 #include "globalLib/Global/globalLib.h"
 
@@ -46,9 +45,17 @@ protected:
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
-    void setupVertexAttribs();
+    void setupVertexAttribsIco();
+    void setupVertexAttribsTriangle();
+    void setupVertexAttribsPoint();
+    void setVaoIco();
+    void setVaoTriangle(bool ini);
+    void setVaoPoint(bool ini);
+    void runAlgorithm();
+
     QVector<float> test;
     QVector<int> test_indice;
     bool m_core;
@@ -58,14 +65,21 @@ private:
     int m_zoom = 0;
     QPoint m_lastPos;
     IcoSphere* m_sphere ;
-    QOpenGLVertexArrayObject m_vao;
-    QOpenGLBuffer m_logoVbo;
-    QOpenGLBuffer m_logoEbo;
-    QOpenGLVertexArrayObject m_vao_points;
-    QOpenGLBuffer m_logoVbo_points;
+    QOpenGLVertexArrayObject m_ico_vao;
+    QOpenGLBuffer m_ico_vbo;
+    QOpenGLBuffer m_ico_ebo;
+
+    QOpenGLVertexArrayObject m_triangle_vao;
+    QOpenGLBuffer m_triangle_vbo;
+    QOpenGLBuffer m_triangle_ebo;
+
+    QOpenGLVertexArrayObject m_point_vao;
+    QOpenGLBuffer m_point_vbo;
+    QOpenGLBuffer m_point_ebo;
+
+    std::vector<float> line_ref;
 
     QOpenGLShaderProgram *m_program = nullptr;
-    QOpenGLShaderProgram *m_program2 = nullptr;
     int m_projMatrixLoc = 0;
     int m_mvMatrixLoc = 0;
     int m_normalMatrixLoc = 0;
@@ -74,6 +88,8 @@ private:
     QMatrix4x4 m_camera;
     QMatrix4x4 m_world;
     static bool m_transparent;
+
+     LatLon latlon_ref;
 };
 
 #endif

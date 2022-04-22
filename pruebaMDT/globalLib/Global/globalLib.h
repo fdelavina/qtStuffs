@@ -9,6 +9,12 @@
     #define DYNAMICSOOLOGIC_EXPORT Q_DECL_IMPORT
     #endif
 
+    #if defined(_DOWNLOADSOOLOGIC)
+    #define DOWNLOADSOOLOGIC_EXPORT Q_DECL_EXPORT
+    #else
+    #define DOWNLOADSOOLOGIC_EXPORT Q_DECL_IMPORT
+    #endif
+
     #if defined(_FENGINE)
     #define FENGINE_EXPORT Q_DECL_EXPORT
     #else
@@ -20,6 +26,8 @@
     #else
     #define WINDOW_EXPORT Q_DECL_IMPORT
     #endif
+
+
 
 
 #endif // GLOBALLIB_H
